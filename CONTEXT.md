@@ -29,6 +29,71 @@ A pre-flight check run before sending the transcript to the Notes Agent. Estimat
 ### Notes Agent
 The external CLI invoked non-interactively to generate Notes from a Transcript. The adapter interface is `NotesAgent`. The only v1 implementation is `CodexAgent`.
 
+### Menu Bar Icon
+A deliberately minimal surface. The menu bar icon is state-tinted but carries **no panel** — clicking it just offers **Quit**. All state and all controls live in the [[jot-dot]], not the menu bar. The icon exists so the app is killable and has a home in the menu bar; it is not a control center.
+
+State is still telegraphed by icon color so the user has a second, peripheral read of what Jot is doing:
+
+| State | Treatment |
+|---|---|
+| Idle | monochrome, default tint |
+| Recording | red |
+| Paused | red, dimmed |
+| Processing | monochrome |
+| Notes ready | green |
+| Failed | red/orange |
+
+### Jot Dot
+The floating ball that is the **primary (and effectively only) control surface** of the app. UI name: "Jot Dot". Code prefix: `Dot` (`DotWindow`, `DotState`, `DotView`). All session state is inferred from the Dot — there is no menu bar panel. See [[floating-overlay]] for behavior (expand/collapse, level meter, controls).
+
+### Floating Overlay
+The behavior spec for the [[jot-dot]] — an ambient, draggable window that is the app's primary control surface. Since the [[menu-bar-icon]] is quit-only, the Dot carries everything: state, controls, and audio confidence.
+
+- **A — Reachable controls.** A floating Pause/Stop always near the user's gaze (their meeting window), avoiding the travel-and-aim cost of the menu bar panel.
+- **B — Live audio confidence.** A single combined level meter (the louder of the two streams) proving sound is actually being captured right now — the primary guard against silent-failure recordings. v1 keeps this dead simple: one meter, no per-stream split, no labels, no silence/issue detection.
+
+Visual language: a **Wispr Flow–style black pill** — a dark capsule that always renders on a forced dark theme so it stays consistent on any background (light, dark, or busy). Hover, not click, is the expand affordance.
+
+Behavior:
+- **Always visible** — permanent floating presence in every state, including Idle. It is the only way to Start a session (the menu bar is quit-only), so it can never fully disappear.
+- Collapsed it is a compact black pill showing minimal state: a status dot (color matches the [[menu-bar-icon]]) plus a per-phase glyph — mic when idle, a live mini-waveform while recording, ellipsis while processing, checkmark on complete, exclamation on failure.
+- **Hover expands** the pill into the full control card; moving the cursor away collapses it back (debounced ~140 ms to avoid flicker during the morph). There is no click-to-expand or chevron.
+- On entering Recording, and when notes become ready, it briefly force-expands ("announce") for a few seconds so the user gets confirmation without hovering, then returns to hover-driven.
+- The collapse/expand transition is an animated, polished spring morph — a deliberate quality bar.
+- Draggable; position is remembered.
+
+Collapsed pill (resting) and expanded card by state:
+
+```
+Idle:        ( ○ 🎙 )         Recording:   ( ● ▁▃▅▇▅ )  red dot + live meter
+   hover ↓                       hover ↓
+   ┌──────────────┐              ┌────────────────────┐
+   │  ○ Jot       │              │ ● Recording  12:34 │
+   │  [● Start]   │              │ ▁▃▅▇▅▃▂▁▃▅▇▅▃▂     │  combined level
+   └──────────────┘              │  [Pause]   [Stop]  │
+                                 └────────────────────┘
+
+Processing:  ( ○ … )          Complete:    ( ● ✓ )
+   hover ↓                       hover ↓
+   ┌──────────────┐              ┌──────────────────────────┐
+   │ Transcribing…│              │ Notes ready              │
+   │ ▓▓▓▓▓░░░ 60% │              │ [Open] [Copy] [Reveal]   │
+   └──────────────┘              └──────────────────────────┘
+```
+
+### First-Run Setup
+A gate, not optional onboarding — recording is disabled until setup completes. Presented as a **dedicated window** (not a panel checklist), walked as a **linear wizard**: each step must complete before the next is shown. Order:
+
+1. Choose notes directory
+2. Microphone permission
+3. System audio / Screen Recording permission (with the [[system-audio-permission]] explanation)
+4. Detect `codex` executable
+5. Codex auth self-test
+6. Download/verify Whisper `small.en` model (~465 MB, needs a real progress bar — a key reason setup is a window, not a panel)
+7. Optional short test capture
+
+The window has room for the model download progress bar, permission explanation copy, and the Codex path field — things that don't fit the menu bar panel. The same checks are later reachable as a Setup / Diagnostics pane from preferences (for when Codex auth expires or the model goes missing), though that pane shows status rather than re-running the linear gate.
+
 ### System Audio Permission
 System audio capture uses ScreenCaptureKit, which requires the Screen Recording permission in macOS System Settings. The permission prompt says "Screen Recording" — Jot explains this with copy: "Jot needs Screen Recording permission to capture system audio. Jot does not record your screen." No fallback to mic-only in v1.
 
