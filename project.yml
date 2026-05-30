@@ -1,0 +1,47 @@
+name: Jot
+options:
+  bundleIdPrefix: com.jot
+  deploymentTarget:
+    macOS: "15.0"
+  xcodeVersion: "26.2"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MACOSX_DEPLOYMENT_TARGET: "15.0"
+    CODE_SIGN_STYLE: Automatic
+    ENABLE_HARDENED_RUNTIME: YES
+
+targets:
+  Jot:
+    type: application
+    platform: macOS
+    deploymentTarget: "15.0"
+    sources:
+      - path: Jot
+    resources:
+      - path: Resources
+        optional: true
+    info:
+      path: Jot/Info.plist
+      properties:
+        CFBundleName: Jot
+        CFBundleDisplayName: Jot
+        CFBundleIdentifier: com.jot.app
+        CFBundleVersion: "1"
+        CFBundleShortVersionString: "0.1.0"
+        LSMinimumSystemVersion: "15.0"
+        LSUIElement: true
+        NSMicrophoneUsageDescription: "Jot records microphone audio while capture is active."
+        NSScreenCaptureUsageDescription: "Jot needs Screen Recording permission to capture system audio. Jot does not record your screen."
+    entitlements:
+      path: Jot/Jot.entitlements
+      properties:
+        com.apple.security.device.microphone: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.jot.app
+        INFOPLIST_FILE: Jot/Info.plist
+        CODE_SIGN_ENTITLEMENTS: Jot/Jot.entitlements
+        ENABLE_APP_SANDBOX: NO
