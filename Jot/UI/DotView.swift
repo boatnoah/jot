@@ -69,7 +69,7 @@ struct DotView: View {
             RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .strokeBorder(.white.opacity(0.12), lineWidth: 1)
         )
-        .shadow(color: .black.opacity(0.45), radius: 18, y: 8)
+        .shadow(color: .black.opacity(0.28), radius: 8, y: 3)
         .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .onHover(perform: handleHover)
     }
