@@ -41,6 +41,8 @@ final class AppState {
         progress = 0
         generatedTitle = nil
         phase = .recording
+        // Plays before capture would begin, so it never bleeds into the recording.
+        SoundPlayer.shared.play(.doublePop)
         startTicking()
         // Briefly force-expand so the user confirms capture is live, then it
         // returns to hover-driven behavior.
@@ -60,6 +62,8 @@ final class AppState {
     func stop() {
         guard phase.isRecording || phase == .paused else { return }
         ticker?.cancel()
+        // Plays after capture has stopped — the "now working on it" cue.
+        SoundPlayer.shared.play(.keyTap)
         runMockProcessing()
     }
 
@@ -92,6 +96,11 @@ final class AppState {
             break
         }
         if target == .idle { announce = false } else { announceBriefly(5) }
+
+        switch target {
+        case .recording: SoundPlayer.shared.play(.doublePop)
+        default: break
+        }
     }
 
     // MARK: - Mock engine
