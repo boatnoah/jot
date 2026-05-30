@@ -50,6 +50,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         debugItem.submenu = debug
         menu.addItem(debugItem)
 
+        // Debug: audition each bundled sound.
+        let sounds = NSMenu()
+        for sound in Sound.allCases {
+            let item = NSMenuItem(title: sound.displayName, action: #selector(playSound(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = Box(sound)
+            sounds.addItem(item)
+        }
+        let soundItem = NSMenuItem(title: "Play Sound", action: nil, keyEquivalent: "")
+        soundItem.submenu = sounds
+        menu.addItem(soundItem)
+
         menu.addItem(.separator())
         let quit = NSMenuItem(title: "Quit Jot", action: #selector(quit), keyEquivalent: "q")
         quit.target = self
@@ -60,6 +72,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func jumpToState(_ sender: NSMenuItem) {
         guard let box = sender.representedObject as? Box<SessionPhase> else { return }
         app.jump(to: box.value)
+    }
+
+    @objc private func playSound(_ sender: NSMenuItem) {
+        guard let box = sender.representedObject as? Box<Sound> else { return }
+        SoundPlayer.shared.play(box.value)
     }
 
     @objc private func quit() {
@@ -95,7 +112,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Idle uses a custom colored pencil (yellow body, red eraser) rather
         // than a monochrome SF Symbol — distinctive and on-brand for Jot.
         if case .idle = app.phase {
-            button.image = Self.pencilImage()
+            button.image = PencilIcon.image()
             button.contentTintColor = nil
             return
         }
@@ -113,66 +130,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         image?.isTemplate = false
         button.image = image
         button.contentTintColor = app.phase.status.nsColor
-    }
-
-    /// A small diagonal school pencil drawn in code: red eraser, silver ferrule,
-    /// yellow body, wood tip with a graphite point. Non-template so it keeps its
-    /// colors in the menu bar.
-    private static func pencilImage() -> NSImage {
-        let size = NSSize(width: 18, height: 18)
-        let image = NSImage(size: size, flipped: false) { _ in
-            guard let ctx = NSGraphicsContext.current?.cgContext else { return false }
-
-            // Draw a horizontal pencil centered at the origin, rotated 45°.
-            ctx.translateBy(x: size.width / 2, y: size.height / 2)
-            ctx.rotate(by: .pi / 4)
-
-            let len: CGFloat = 15
-            let h: CGFloat = 5
-            let left = -len / 2, right = len / 2
-            let top = h / 2, bottom = -h / 2
-
-            // Boundaries left→right: wood tip | yellow body | ferrule | eraser.
-            let woodEnd = left + 3.5
-            let bodyEnd = right - 4.5
-            let ferruleEnd = right - 2.8
-
-            // Wood cone (tan).
-            ctx.beginPath()
-            ctx.move(to: CGPoint(x: left, y: 0))
-            ctx.addLine(to: CGPoint(x: woodEnd, y: top))
-            ctx.addLine(to: CGPoint(x: woodEnd, y: bottom))
-            ctx.closePath()
-            ctx.setFillColor(NSColor(calibratedRed: 0.85, green: 0.69, blue: 0.45, alpha: 1).cgColor)
-            ctx.fillPath()
-
-            // Graphite point (dark).
-            ctx.beginPath()
-            ctx.move(to: CGPoint(x: left, y: 0))
-            ctx.addLine(to: CGPoint(x: left + 1.6, y: top * 0.45))
-            ctx.addLine(to: CGPoint(x: left + 1.6, y: bottom * 0.45))
-            ctx.closePath()
-            ctx.setFillColor(NSColor(white: 0.13, alpha: 1).cgColor)
-            ctx.fillPath()
-
-            // Yellow body.
-            ctx.setFillColor(NSColor(calibratedRed: 1.0, green: 0.79, blue: 0.05, alpha: 1).cgColor)
-            ctx.fill(CGRect(x: woodEnd, y: bottom, width: bodyEnd - woodEnd, height: h))
-
-            // Silver ferrule.
-            ctx.setFillColor(NSColor(white: 0.72, alpha: 1).cgColor)
-            ctx.fill(CGRect(x: bodyEnd, y: bottom, width: ferruleEnd - bodyEnd, height: h))
-
-            // Red eraser (rounded outer end).
-            let eraser = CGRect(x: ferruleEnd, y: bottom, width: right - ferruleEnd, height: h)
-            ctx.addPath(CGPath(roundedRect: eraser, cornerWidth: 1.6, cornerHeight: 1.6, transform: nil))
-            ctx.setFillColor(NSColor(calibratedRed: 0.91, green: 0.27, blue: 0.22, alpha: 1).cgColor)
-            ctx.fillPath()
-
-            return true
-        }
-        image.isTemplate = false
-        return image
     }
 }
 

@@ -76,9 +76,14 @@ struct DotView: View {
 
     private var header: some View {
         HStack(spacing: 8) {
-            Circle()
-                .fill(app.phase.status.color)
-                .frame(width: 9, height: 9)
+            if case .idle = app.phase {
+                // Brand mark: the same colored pencil as the menu bar icon.
+                Image(nsImage: PencilIcon.image(size: 15))
+            } else {
+                Circle()
+                    .fill(app.phase.status.color)
+                    .frame(width: 9, height: 9)
+            }
             Text(headerTitle)
                 .font(.system(size: 13, weight: .semibold))
                 .lineLimit(1)

@@ -20,7 +20,6 @@ targets:
     deploymentTarget: "15.0"
     sources:
       - path: Jot
-    resources:
       - path: Resources
         optional: true
     info:
