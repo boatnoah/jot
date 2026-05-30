@@ -1,0 +1,37 @@
+# Xcode
+*.xcuserstate
+*.xccheckout
+*.moved-aside
+DerivedData/
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+xcuserdata/
+*.xcscmblueprint
+*.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
+
+# Swift Package Manager
+.build/
+*.resolved
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V8
+.Trashes
+.fseventsd
+
+# Whisper model (too large for git)
+*.bin
+*.gguf
+
+# Raw audio chunks (ephemeral)
+*.caf
+*.wav
+
+# Secrets / local config
+.env
+*.local
