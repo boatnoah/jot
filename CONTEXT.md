@@ -92,7 +92,19 @@ A gate, not optional onboarding — recording is disabled until setup completes.
 6. Download/verify Whisper `small.en` model (~465 MB, needs a real progress bar — a key reason setup is a window, not a panel)
 7. Optional short test capture
 
-The window has room for the model download progress bar, permission explanation copy, and the Codex path field — things that don't fit the menu bar panel. The same checks are later reachable as a Setup / Diagnostics pane from preferences (for when Codex auth expires or the model goes missing), though that pane shows status rather than re-running the linear gate.
+The window has room for the model download progress bar, permission explanation copy, and the Codex path field — things that don't fit the menu bar panel.
+
+**Structure:** a **minimal, one-step-at-a-time screen** — no sidebar, no checklist. The content is centered with generous whitespace: a friendly headline (a question, not a label), calm secondary copy, the step's action, and a small **"step N of 7"** whisper as the only persistent progress cue. One clear focus per screen. The wizard and the later **Setup / Diagnostics pane** are two renderings of the same underlying check model: the wizard walks the checks linearly as a gate, while the diagnostics pane (for when Codex auth expires or the model goes missing) shows all checks' live status at once as a checklist. Dropping the sidebar from the wizard does not affect that reuse — the model backs both.
+
+**Aesthetic:** "Lemonade soul, dark native shell." A **dark** window matching the app (forced dark theme, pencil brand mark), built from **standard native macOS controls** with a normal window frame — not custom chrome — so it reads as a legit Mac window during OS permission grants and avoids a jarring light→dark handoff with the Dot. Does not follow the system light/dark setting. The warmth comes from layout and tone, not chrome: lots of air, large friendly type, human copy, smooth spring transitions between steps, and a genuinely celebratory finish (the window closes and the Dot hatches into existence). The signature accent is the **pencil yellow (#FFC90D)** — exactly one bold yellow element per screen (the rounded primary button, the model-download progress fill). Eraser **red (#E84538)** is reserved for failures and the celebratory beat.
+
+**Gate behavior:**
+- First launch opens the setup window automatically, centered.
+- While setup is incomplete the [[jot-dot]] is **hidden entirely** — there is nothing to record yet. The [[menu-bar-icon]] stays, but its menu is reduced to "Open Setup…" and Quit.
+- Quitting mid-setup is always allowed. On relaunch setup **resumes where it left off**: completed steps re-verify silently (notes folder set? permission still granted? model still on disk?) and the user lands on the first incomplete step.
+- On completion the window closes and the Dot appears for the first time, ready to record.
+
+**Navigation:** the yellow primary button is the step's action; once the step's requirement is actually satisfied (permission granted, folder chosen, download finished) it becomes **Continue**. No auto-advance — async completions (OS dialogs, the 465 MB download) shouldn't jump the window out from under the user. A small **‹ back** chevron (top-left) returns to the previous, already-satisfied step to revisit/change it; it is shown only when there is a satisfied step to go back to. Forward steps are never reachable until the current one is satisfied.
 
 ### System Audio Permission
 System audio capture uses ScreenCaptureKit, which requires the Screen Recording permission in macOS System Settings. The permission prompt says "Screen Recording" — Jot explains this with copy: "Jot needs Screen Recording permission to capture system audio. Jot does not record your screen." No fallback to mic-only in v1.

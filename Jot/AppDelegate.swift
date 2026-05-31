@@ -6,27 +6,59 @@ import SwiftUI
 /// the floating Jot Dot window. The menu bar carries no control panel — all
 /// controls live in the Dot.
 @MainActor
-final class AppDelegate: NSObject, NSApplicationDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private let app = AppState()
+    private let setup = SetupState()
     private var statusItem: NSStatusItem?
     private var dotWindow: DotWindow?
+    private var setupWindow: SetupWindow?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         setUpStatusItem()
-        showDot()
         observePhase()
+
+        // First-run setup is a gate: silently re-verify every check, then either
+        // resume setup or, if everything passes, go straight to the ready state
+        // and show the Dot for the first time (CONTEXT.md → First-Run Setup).
+        Task { @MainActor in
+            await setup.probeAll()
+            if setup.isComplete {
+                enterReadyState()
+            } else {
+                presentSetup()
+            }
+        }
     }
 
     // MARK: - Menu bar (quit-only)
 
     private func setUpStatusItem() {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        item.menu = makeMenu()
         statusItem = item
         updateStatusIcon()
+        // The menu is set once setup state is known (setup menu vs ready menu).
     }
 
-    private func makeMenu() -> NSMenu {
+    /// Menu while setup is incomplete: just reopen setup, or quit.
+    private func makeSetupMenu() -> NSMenu {
+        let menu = NSMenu()
+        let open = NSMenuItem(title: "Open Setup…", action: #selector(openSetupMenu), keyEquivalent: "")
+        open.target = self
+        menu.addItem(open)
+        #if DEBUG
+        let preview = NSMenuItem(title: "Preview Setup Flow", action: #selector(previewSetupFlow), keyEquivalent: "")
+        preview.target = self
+        menu.addItem(preview)
+        #endif
+        menu.addItem(.separator())
+        let quit = NSMenuItem(title: "Quit Jot", action: #selector(quit), keyEquivalent: "q")
+        quit.target = self
+        menu.addItem(quit)
+        return menu
+    }
+
+    /// Full menu once setup is complete (debug previews + quit).
+    private func makeReadyMenu() -> NSMenu {
         let menu = NSMenu()
 
         // Debug: preview each visual state of the Dot.
@@ -62,6 +94,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         soundItem.submenu = sounds
         menu.addItem(soundItem)
 
+        #if DEBUG
+        let preview = NSMenuItem(title: "Preview Setup Flow", action: #selector(previewSetupFlow), keyEquivalent: "")
+        preview.target = self
+        menu.addItem(preview)
+        #endif
+
         menu.addItem(.separator())
         let quit = NSMenuItem(title: "Quit Jot", action: #selector(quit), keyEquivalent: "q")
         quit.target = self
@@ -83,9 +121,96 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApplication.shared.terminate(nil)
     }
 
+    @objc private func openSetupMenu() {
+        Task { @MainActor in
+            await setup.probeAll()
+            if setup.isComplete {
+                enterReadyState()
+            } else {
+                presentSetup()
+            }
+        }
+    }
+
+    // MARK: - First-run setup gate
+
+    /// Present the real setup gate: reduce the menu, hide the Dot (nothing to
+    /// record yet), and bring up the window.
+    private func presentSetup() {
+        statusItem?.menu = makeSetupMenu()
+        dotWindow?.orderOut(nil)
+        showSetupWindow()
+    }
+
+    /// Bring up the setup window as a real focusable window. A menu-bar accessory
+    /// app must switch to `.regular` activation for a normal window to come to
+    /// the front and accept focus during OS permission prompts.
+    private func showSetupWindow() {
+        NSApp.setActivationPolicy(.regular)
+        let window = setupWindow ?? SetupWindow(state: setup, onComplete: { [weak self] in
+            self?.finishSetup()
+        })
+        window.delegate = self
+        setupWindow = window
+        window.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
+    /// Finish from the window (the "Start using Jot" button): order out, then
+    /// settle into whatever state we should now be in.
+    private func finishSetup() {
+        setupWindow?.orderOut(nil)
+        setupWindowClosed()
+    }
+
+    /// Resolve app state after the setup window goes away (whether finished,
+    /// closed mid-gate, or exiting a debug preview): if setup actually passes,
+    /// go to the ready state; otherwise recede to the menu bar with setup still
+    /// reopenable.
+    private func setupWindowClosed() {
+        #if DEBUG
+        setup.endPreview()
+        #endif
+        if setup.isComplete {
+            enterReadyState()
+        } else {
+            NSApp.setActivationPolicy(.accessory)
+            statusItem?.menu = makeSetupMenu()
+            dotWindow?.orderOut(nil)
+        }
+    }
+
+    /// The post-setup steady state: accessory app, full menu, Dot visible.
+    private func enterReadyState() {
+        NSApp.setActivationPolicy(.accessory)
+        statusItem?.menu = makeReadyMenu()
+        showDot()
+    }
+
+    /// Closing the setup window (red button) routes through the same resolution
+    /// as finishing. `finishSetup` uses `orderOut`, not `close`, so it never
+    /// double-fires this.
+    func windowWillClose(_ notification: Notification) {
+        guard (notification.object as? NSWindow) === setupWindow else { return }
+        setupWindowClosed()
+    }
+
+    #if DEBUG
+    /// Debug: page through every setup step + the completion screen for design
+    /// review, without granting permissions or downloading anything.
+    @objc private func previewSetupFlow() {
+        setup.startPreview()
+        showSetupWindow()
+    }
+    #endif
+
     // MARK: - Dot window
 
     private func showDot() {
+        if let dotWindow {
+            dotWindow.orderFrontRegardless()
+            return
+        }
         let window = DotWindow(app: app)
         window.orderFrontRegardless()
         dotWindow = window

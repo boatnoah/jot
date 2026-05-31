@@ -114,14 +114,8 @@ struct DotView: View {
                 primaryButton("Stop", systemImage: "stop.fill", tint: .red) { app.stop() }
             }
 
-        case .processing(let stage):
-            VStack(alignment: .leading, spacing: 8) {
-                Text(stage.label + "…")
-                    .font(.system(size: 12))
-                    .foregroundStyle(.secondary)
-                ProgressView(value: app.progress)
-                    .progressViewStyle(.linear)
-            }
+        case .processing:
+            ThinkingView()
 
         case .complete:
             HStack(spacing: 8) {
@@ -153,7 +147,7 @@ struct DotView: View {
         case .idle: return "Jot"
         case .recording: return "Recording"
         case .paused: return "Paused"
-        case .processing: return "Working"
+        case .processing: return "Jot"
         case .complete: return app.generatedTitle ?? "Notes ready"
         case .failed(let kind): return kind.title
         }
@@ -294,6 +288,69 @@ private struct SubtleButtonStyle: ButtonStyle {
                 Color.white.opacity(configuration.isPressed ? 0.2 : 0.11),
                 in: RoundedRectangle(cornerRadius: 10, style: .continuous)
             )
+    }
+}
+
+/// Claude-Code-style "thinking" indicator shown during processing: a cycling
+/// gerund verb with a shimmer sweep and a pulsing sparkle. Replaces the progress
+/// bar — the work is short and the playful vibe matters more than a precise %.
+private struct ThinkingView: View {
+    private static let verbs = [
+        "Transcribing", "Jotting", "Distilling", "Pondering", "Synthesizing",
+        "Connecting dots", "Summarizing", "Noodling", "Percolating", "Musing",
+        "Polishing", "Untangling", "Marinating", "Cogitating",
+    ]
+
+    @State private var index = Int.random(in: 0..<verbs.count)
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "sparkles")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.85))
+                .symbolEffect(.pulse, options: .repeating)
+            Text(Self.verbs[index] + "…")
+                .font(.system(size: 13, weight: .medium))
+                .modifier(ShimmerText())
+                .id(index)
+                .transition(.opacity)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .task {
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .milliseconds(1500))
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    index = (index + 1) % Self.verbs.count
+                }
+            }
+        }
+    }
+}
+
+/// A soft left-to-right highlight sweep across text — the "AI is thinking" look.
+private struct ShimmerText: ViewModifier {
+    @State private var move = false
+
+    func body(content: Content) -> some View {
+        content
+            .foregroundStyle(.white.opacity(0.4))
+            .overlay {
+                GeometryReader { geo in
+                    LinearGradient(
+                        colors: [.clear, .white.opacity(0.95), .clear],
+                        startPoint: .leading, endPoint: .trailing
+                    )
+                    .frame(width: geo.size.width * 0.55)
+                    .offset(x: move ? geo.size.width : -geo.size.width * 0.55)
+                }
+                .mask(content)
+                .allowsHitTesting(false)
+            }
+            .onAppear {
+                withAnimation(.linear(duration: 1.5).repeatForever(autoreverses: false)) {
+                    move = true
+                }
+            }
     }
 }
 

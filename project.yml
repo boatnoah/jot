@@ -10,7 +10,14 @@ settings:
   base:
     SWIFT_VERSION: "6.0"
     MACOSX_DEPLOYMENT_TARGET: "15.0"
-    CODE_SIGN_STYLE: Automatic
+    # Sign with the Apple Development cert (not ad-hoc) so the bundle has a
+    # stable code signature. macOS ties Screen Recording / Microphone (TCC)
+    # grants to the signature, so ad-hoc builds lose the grant on every rebuild.
+    # Manual signing with the cert hash avoids the "Mac Development" provisioning
+    # lookup that automatic signing wants.
+    CODE_SIGN_STYLE: Manual
+    DEVELOPMENT_TEAM: 9NWJ7M59WK
+    CODE_SIGN_IDENTITY: 9350CDF728B6E325DCDAA016F8E6E5C6E5D82100
     ENABLE_HARDENED_RUNTIME: YES
 
 targets:
@@ -37,7 +44,9 @@ targets:
     entitlements:
       path: Jot/Jot.entitlements
       properties:
-        com.apple.security.device.microphone: true
+        # Hardened-runtime key for mic access (the `.microphone` key is the
+        # App Sandbox one and is ignored since the sandbox is disabled).
+        com.apple.security.device.audio-input: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.jot.app
