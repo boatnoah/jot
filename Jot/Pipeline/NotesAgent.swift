@@ -15,31 +15,12 @@ protocol NotesAgent: Sendable {
     func generateNotes(transcriptURL: URL, metadata: MeetingMetadata) async throws -> String
 }
 
-enum NotesAgentError: Error {
+enum NotesAgentError: Error, Equatable {
     case executableNotFound
     case notAuthenticated
     case timedOut
     case transcriptTooLarge
+    /// The agent ran but returned no usable notes (empty output, non-zero exit).
+    case generationFailed(String)
     case notImplemented
-}
-
-/// Invokes the user's authenticated `codex` CLI via `Process` with explicit
-/// arguments, stdin/stdout pipes, and a timeout. Never shell-interpolates
-/// transcript or prompt text. Stubbed for now.
-struct CodexAgent: NotesAgent {
-    var displayName: String { "Codex" }
-
-    /// Overridable executable path; default resolved from PATH during setup.
-    var executableURL: URL
-
-    /// Hardcoded for now; will become configurable (CONTEXT.md → 5-min default).
-    var timeout: Duration = .seconds(300)
-
-    func preflight() async throws -> AgentStatus {
-        throw NotesAgentError.notImplemented
-    }
-
-    func generateNotes(transcriptURL: URL, metadata: MeetingMetadata) async throws -> String {
-        throw NotesAgentError.notImplemented
-    }
 }
