@@ -1,13 +1,12 @@
 import Foundation
 
-/// Step 5 — verify Codex is signed in and can actually answer, by running a
-/// tiny non-interactive self-test (CONTEXT.md → First-Run Setup).
+/// Step 5 — verify the notes agent can actually run and is authenticated, so a
+/// broken or logged-out agent is caught at setup time rather than after the user
+/// records a whole session (CONTEXT.md → First-Run Setup).
 ///
-/// STUB: the real `NotesAgent` / `CodexAgent` pipeline isn't built yet, so this
-/// check is a placeholder behind the `SetupCheck` protocol. When `CodexAgent`
-/// lands, only this file changes — `probe()`/`act()` will invoke `codex` with a
-/// throwaway prompt and confirm a non-error response. For now it auto-satisfies
-/// so the wizard is fully walkable end to end.
+/// Backed by the real `NotesAgent.preflight()` (for Codex, `codex login
+/// status`). Re-verified live on every launch — if the user later logs out, the
+/// gate reopens to this step. No persisted "done" flag.
 @MainActor
 @Observable
 final class CodexAuthCheck: SetupCheck {
@@ -15,23 +14,64 @@ final class CodexAuthCheck: SetupCheck {
     private(set) var status: CheckStatus = .unsatisfied
 
     let headline = "Is Codex signed in?"
-    let body = "Jot runs a quick test to make sure Codex can generate notes for you."
-    let actionTitle = "Run sign-in test"
+    let body = "Jot runs a quick check that Codex is installed and signed in so it can generate your notes."
+    let actionTitle = "Check Codex"
 
-    // Until the real self-test exists, remember that the user ran the stub so a
-    // completed setup stays complete across launches (rather than reappearing).
-    private static let doneKey = "codexAuthStubCompleted"
+    private(set) var detail: String?
 
     func probe() async {
-        // TODO(pipeline): run a real `codex` self-test once CodexAgent exists.
-        status = UserDefaults.standard.bool(forKey: Self.doneKey) ? .satisfied : .unsatisfied
+        await verify()
     }
 
     func act() async {
         status = .running(nil)
-        // TODO(pipeline): real self-test. Simulate a brief check for now.
-        try? await Task.sleep(for: .milliseconds(400))
-        UserDefaults.standard.set(true, forKey: Self.doneKey)
-        status = .satisfied
+        await verify()
+    }
+
+    private func verify() async {
+        // Resolution shares the runtime registry, so this reflects exactly what
+        // notes generation will use. nil means the executable wasn't found yet.
+        guard let agent = NotesAgentKind.selected.makeAgent() else {
+            detail = nil
+            status = .failed("Couldn't find the Codex executable — finish the previous step first.")
+            return
+        }
+        do {
+            let result = try await agent.preflight()
+            detail = result.detail
+            if result.isReady {
+                status = .satisfied
+            } else {
+                status = .failed(signInHint(result.detail))
+            }
+        } catch {
+            detail = nil
+            status = .failed(failureMessage(for: error))
+        }
+    }
+
+    /// A not-ready preflight usually means logged out — nudge toward `codex
+    /// login`, but keep any specific detail (e.g. a missing-node error).
+    private func signInHint(_ detail: String) -> String {
+        if detail.lowercased().contains("node") {
+            return "\(detail)\n\nCodex needs Node.js on your PATH. Install it (e.g. via Homebrew) and try again."
+        }
+        return "Codex isn't signed in. Run `codex login` in your terminal, then check again."
+    }
+
+    private func failureMessage(for error: Error) -> String {
+        guard let error = error as? NotesAgentError else {
+            return "Couldn't verify Codex: \(error.localizedDescription)"
+        }
+        switch error {
+        case .executableNotFound:
+            return "Couldn't run Codex. Make sure Codex (and Node.js) are installed and on your PATH."
+        case .notAuthenticated:
+            return "Codex isn't signed in. Run `codex login` in your terminal, then check again."
+        case .timedOut:
+            return "Codex didn't respond in time. Check your connection and try again."
+        default:
+            return "Couldn't verify Codex. Try again, or reinstall Codex."
+        }
     }
 }

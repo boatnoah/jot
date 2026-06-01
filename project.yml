@@ -53,3 +53,30 @@ targets:
         INFOPLIST_FILE: Jot/Info.plist
         CODE_SIGN_ENTITLEMENTS: Jot/Jot.entitlements
         ENABLE_APP_SANDBOX: NO
+
+  JotTests:
+    type: bundle.unit-test
+    platform: macOS
+    deploymentTarget: "15.0"
+    sources:
+      - path: Tests
+    dependencies:
+      - target: Jot
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.jot.tests
+        GENERATE_INFOPLIST_FILE: YES
+        # Logic tests host in the app target (for @testable import Jot); the app
+        # short-circuits its UI under XCTest.
+
+schemes:
+  Jot:
+    build:
+      targets:
+        Jot: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - JotTests

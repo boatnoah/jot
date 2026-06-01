@@ -14,6 +14,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var setupWindow: SetupWindow?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // When the app is the test host, don't spin up the menu bar / setup
+        // window — unit tests just need the module loaded.
+        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil { return }
+
         setUpStatusItem()
         observePhase()
 
