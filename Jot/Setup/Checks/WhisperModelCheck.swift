@@ -23,7 +23,10 @@ final class WhisperModelCheck: SetupCheck {
 
     // MARK: - Model location & source
 
-    static let modelFileName = "ggml-small.en.bin"
+    // The on-disk location is owned by the pipeline (where the transcriber reads
+    // it from); this check only handles downloading to that location.
+    private static var modelsDirectory: URL { WhisperCppTranscriber.modelsDirectory }
+    private static var modelURL: URL { WhisperCppTranscriber.defaultModelURL }
 
     // TODO(model-source): confirm this URL + add SHA-256 verification and a
     // resume-on-interrupt path. Defaulting to the whisper.cpp ggml model on
@@ -35,15 +38,6 @@ final class WhisperModelCheck: SetupCheck {
     /// Heuristic floor for "looks like a complete model" until SHA verification
     /// lands. The real file is ~465 MB.
     private static let minExpectedBytes: Int64 = 400_000_000
-
-    static var modelsDirectory: URL {
-        let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-        return base.appendingPathComponent("Jot/Models", isDirectory: true)
-    }
-
-    static var modelURL: URL {
-        modelsDirectory.appendingPathComponent(modelFileName)
-    }
 
     // MARK: - Probe
 
