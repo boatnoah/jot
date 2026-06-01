@@ -31,6 +31,8 @@ xcuserdata/
 # Raw audio chunks (ephemeral)
 *.caf
 *.wav
+# ...but keep committed test audio fixtures
+!Tests/Fixtures/*.wav
 
 # Secrets / local config
 .env

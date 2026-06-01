@@ -110,4 +110,13 @@ The window has room for the model download progress bar, permission explanation 
 System audio capture uses ScreenCaptureKit, which requires the Screen Recording permission in macOS System Settings. The permission prompt says "Screen Recording" — Jot explains this with copy: "Jot needs Screen Recording permission to capture system audio. Jot does not record your screen." No fallback to mic-only in v1.
 
 ### Transcriber
-The internal component that converts a raw audio Chunk into a list of `TranscriptSegment` values. The only v1 implementation is `WhisperCppTranscriber`.
+The internal component that converts a raw audio Chunk into a list of `TranscriptSegment` values. The only v1 implementation is `WhisperCppTranscriber`, which shells out to whisper.cpp's `whisper-cli` (JSON output, `-oj`) and maps its millisecond offsets to session-elapsed time using the chunk's `elapsedOffset`. Non-speech markers whisper emits for silence (`[BLANK_AUDIO]`, parenthesized noise) are dropped.
+
+### External Dependencies & Distribution
+Jot is distributed as a **brew install**, not the App Store, which decides how its external tools are provided:
+
+- **`whisper-cli`** — a **brew dependency** (`whisper-cpp`), found on `PATH`, *not* bundled in the app. (Reverses the earlier "ship a pre-compiled binary in the app bundle" decision — bundling would mean wrangling whisper's dylibs + signing/notarization, which a `depends_on "whisper-cpp"` avoids entirely.)
+- **`node`** — a brew dependency (`depends_on "node"`), because `codex` is a Node script.
+- **`codex`** — **user-installed** (`npm i -g @openai/codex`) and authenticated with `codex login`; it's tied to the user's account and isn't brew-installable. Setup gates on detecting it and on `codex login status`.
+
+Because a Finder/launchd-spawned GUI app inherits a minimal `PATH` (no Homebrew), Jot widens `PATH` (via `ExecutableLocator.augmentedEnvironment()`) when spawning these CLIs so a node-based tool like `codex` can find `node`. The whisper-cli location is resolved bundled-first then `PATH`; the model lives at `~/Library/Application Support/Jot/Models/` (the `WhisperCppTranscriber` owns this path; setup downloads to it).
