@@ -14,6 +14,12 @@ final class AudioRecorder: @unchecked Sendable {
     private let chunkSeconds: TimeInterval
     private let queue = DispatchQueue(label: "com.jot.audio.recorder")
     private let tickInterval: TimeInterval = 0.1
+    /// How long the mic may deliver nothing but exact-zero buffers before we
+    /// flag it. A live mic always has a noise floor above `micSilenceEpsilon`,
+    /// so sustained exact silence means a muted device or an ineffective grant
+    /// (macOS hands back zero-filled buffers rather than erroring).
+    private let micSilenceTimeout: TimeInterval = 3
+    private let micSilenceEpsilon = 1e-6
 
     private var timer: DispatchSourceTimer?
     private var elapsed: TimeInterval = 0
@@ -21,6 +27,8 @@ final class AudioRecorder: @unchecked Sendable {
     private var running = false
     private var paused = false
     private var pendingPeaks: [AudioSource: Double] = [:]
+    private var micSilentSeconds: TimeInterval = 0
+    private var micSilenceWarned = false
 
     /// A chunk closed (rotation or stop) — the streaming-transcription hook.
     var onChunkClosed: (@Sendable (ClosedChunk) -> Void)?
@@ -30,6 +38,11 @@ final class AudioRecorder: @unchecked Sendable {
     var onElapsed: (@Sendable (TimeInterval) -> Void)?
     /// Per-source peak since the last tick — diagnostics only.
     var onSourceLevel: (@Sendable (AudioSource, Double) -> Void)?
+    /// Fires once per session if the mic is delivering buffers but they are all
+    /// exact silence for `micSilenceTimeout` — the signature of a muted device
+    /// or an ineffective mic grant. Without this, such a session records
+    /// nothing while reporting success.
+    var onMicSilent: (@Sendable () -> Void)?
 
     init(directory: URL, capturers: [any AudioCapturing], chunkSeconds: TimeInterval = 30) {
         self.writer = ChunkWriter(directory: directory)
@@ -82,6 +95,8 @@ final class AudioRecorder: @unchecked Sendable {
         running = true
         elapsed = 0
         nextRotation = chunkSeconds
+        micSilentSeconds = 0
+        micSilenceWarned = false
         let timer = DispatchSource.makeTimerSource(queue: queue)
         timer.schedule(deadline: .now() + tickInterval, repeating: tickInterval)
         timer.setEventHandler { [weak self] in self?.tick() }
@@ -99,6 +114,7 @@ final class AudioRecorder: @unchecked Sendable {
             }
             let now = elapsed
             if let onElapsed { DispatchQueue.main.async { onElapsed(now) } }
+            checkMicSilence()
         }
         // Combined level = louder stream since the last tick; reset for the next.
         let level = pendingPeaks.values.max() ?? 0
@@ -109,6 +125,24 @@ final class AudioRecorder: @unchecked Sendable {
         }
         pendingPeaks.removeAll(keepingCapacity: true)
         if let onLevel { DispatchQueue.main.async { onLevel(level) } }
+    }
+
+    /// Detect a mic that is "running but silent": buffers are arriving (the key
+    /// is present this tick) yet every sample is exact zero. Only counts ticks
+    /// where a mic buffer was actually seen, so it never false-fires when the
+    /// engine simply isn't producing. Any real signal resets the streak. Fires
+    /// `onMicSilent` once. Read `pendingPeaks` before `tick` clears it.
+    private func checkMicSilence() {
+        guard !micSilenceWarned, let micPeak = pendingPeaks[.microphone] else { return }
+        guard micPeak <= micSilenceEpsilon else {
+            micSilentSeconds = 0
+            return
+        }
+        micSilentSeconds += tickInterval
+        guard micSilentSeconds >= micSilenceTimeout else { return }
+        micSilenceWarned = true
+        NSLog("[AudioRecorder] microphone delivering only silence for %.0fs — muted device or ineffective mic grant?", micSilenceTimeout)
+        if let onMicSilent { DispatchQueue.main.async { onMicSilent() } }
     }
 
     private func deliverChunk(_ chunk: ClosedChunk) {
