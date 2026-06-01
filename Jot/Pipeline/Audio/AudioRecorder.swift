@@ -17,8 +17,9 @@ final class AudioRecorder: @unchecked Sendable {
     /// How long the mic may deliver nothing but exact-zero buffers before we
     /// flag it. A live mic always has a noise floor above `micSilenceEpsilon`,
     /// so sustained exact silence means a muted device or an ineffective grant
-    /// (macOS hands back zero-filled buffers rather than erroring).
-    private let micSilenceTimeout: TimeInterval = 3
+    /// (macOS hands back zero-filled buffers rather than erroring). Injectable
+    /// so tests can drive it without waiting out the production window.
+    private let micSilenceTimeout: TimeInterval
     private let micSilenceEpsilon = 1e-6
 
     private var timer: DispatchSourceTimer?
@@ -44,11 +45,17 @@ final class AudioRecorder: @unchecked Sendable {
     /// nothing while reporting success.
     var onMicSilent: (@Sendable () -> Void)?
 
-    init(directory: URL, capturers: [any AudioCapturing], chunkSeconds: TimeInterval = 30) {
+    init(
+        directory: URL,
+        capturers: [any AudioCapturing],
+        chunkSeconds: TimeInterval = 30,
+        micSilenceTimeout: TimeInterval = 3
+    ) {
         self.writer = ChunkWriter(directory: directory)
         self.capturers = capturers
         self.chunkSeconds = chunkSeconds
         self.nextRotation = chunkSeconds
+        self.micSilenceTimeout = micSilenceTimeout
         writer.onChunkClosed = { [weak self] chunk in
             self?.deliverChunk(chunk)
         }

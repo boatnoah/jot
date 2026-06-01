@@ -42,6 +42,7 @@
 		9DC2B1A51015011F4D557737 /* StatusKind+Color.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A7B1806E5E83EA0B36A17A8 /* StatusKind+Color.swift */; };
 		AB55024FDEA15BFD8FFDC364 /* SetupCheck.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FBB9BC02FB7EBE7CE2724F1 /* SetupCheck.swift */; };
 		B85BD4BEBA06B7DDCC62C84D /* ChunkWriterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9316E3054EA32D4F211E4881 /* ChunkWriterTests.swift */; };
+		AA01AA01AA01AA01AA01AA01 /* AudioRecorderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB02BB02BB02BB02BB02BB02 /* AudioRecorderTests.swift */; };
 		BBEFA6CCD36B27279B80893B /* keytap.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = F966AE6F72289AC8AE7B7CCB /* keytap.mp3 */; };
 		C42578F69F6A138C6F7D2DE4 /* SetupStep.swift in Sources */ = {isa = PBXBuildFile; fileRef = B93F48928E1D92ED0BD9C0E2 /* SetupStep.swift */; };
 		D8BC349E6AEB65C20011D228 /* CodexAgent.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC0A9F47F8B2F35A6547B9F1 /* CodexAgent.swift */; };
@@ -102,6 +103,7 @@
 		915A46A3B1AC7A9F80B39BBA /* CodexAuthCheck.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexAuthCheck.swift; sourceTree = "<group>"; };
 		91A046D41244B0686C9E96BF /* PencilIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PencilIcon.swift; sourceTree = "<group>"; };
 		9316E3054EA32D4F211E4881 /* ChunkWriterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChunkWriterTests.swift; sourceTree = "<group>"; };
+		BB02BB02BB02BB02BB02BB02 /* AudioRecorderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioRecorderTests.swift; sourceTree = "<group>"; };
 		941CE89787951F62CAF08B7C /* NotesPrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesPrompt.swift; sourceTree = "<group>"; };
 		AD57E2F52D748DDB6AD60567 /* NotesAgentKind.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesAgentKind.swift; sourceTree = "<group>"; };
 		B93F48928E1D92ED0BD9C0E2 /* SetupStep.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupStep.swift; sourceTree = "<group>"; };
@@ -125,6 +127,7 @@
 			isa = PBXGroup;
 			children = (
 				9316E3054EA32D4F211E4881 /* ChunkWriterTests.swift */,
+				BB02BB02BB02BB02BB02BB02 /* AudioRecorderTests.swift */,
 				1ED389770DC6D16980B1AB48 /* CodexAgentIntegrationTests.swift */,
 				1CDED6AFFE8795F0620399A3 /* ProcessRunnerTests.swift */,
 				E4CDD8BBB7FA493B4CE6C9F9 /* WhisperTranscriberIntegrationTests.swift */,
@@ -433,6 +436,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B85BD4BEBA06B7DDCC62C84D /* ChunkWriterTests.swift in Sources */,
+				AA01AA01AA01AA01AA01AA01 /* AudioRecorderTests.swift in Sources */,
 				35B68C396CC7354CB13082EA /* CodexAgentIntegrationTests.swift in Sources */,
 				15D71F87D3A4243F3CF4FCD7 /* ProcessRunnerTests.swift in Sources */,
 				89FDECDE1D2C6F7689768B90 /* WhisperTranscriberIntegrationTests.swift in Sources */,
