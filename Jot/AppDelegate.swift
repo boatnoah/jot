@@ -61,10 +61,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         return menu
     }
 
-    /// Full menu once setup is complete (debug previews + quit).
+    /// Full menu once setup is complete. In release builds this is just Quit;
+    /// debug builds add the state/sound previews and the setup-flow preview.
     private func makeReadyMenu() -> NSMenu {
         let menu = NSMenu()
 
+        #if DEBUG
         // Debug: preview each visual state of the Dot.
         let debug = NSMenu()
         let states: [(String, SessionPhase)] = [
@@ -98,13 +100,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         soundItem.submenu = sounds
         menu.addItem(soundItem)
 
-        #if DEBUG
         let preview = NSMenuItem(title: "Preview Setup Flow", action: #selector(previewSetupFlow), keyEquivalent: "")
         preview.target = self
         menu.addItem(preview)
-        #endif
 
         menu.addItem(.separator())
+        #endif
+
         let quit = NSMenuItem(title: "Quit Jot", action: #selector(quit), keyEquivalent: "q")
         quit.target = self
         menu.addItem(quit)

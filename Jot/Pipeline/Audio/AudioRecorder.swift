@@ -77,13 +77,27 @@ final class AudioRecorder: @unchecked Sendable {
         queue.sync { self.beginTimer() }
     }
 
-    func stop() {
+    /// Stop capture, close the final chunk, and **return** it so the caller can
+    /// enqueue its transcription before draining — rotation chunks stream out via
+    /// `onChunkClosed` (a main-queue hop), but the final chunk closes inside this
+    /// synchronous call, so delivering it that way would race the caller's drain.
+    /// Returning it makes the last chunk deterministic. `nil` only if `finish`
+    /// somehow closed nothing.
+    @discardableResult
+    func stop() -> ClosedChunk? {
         for capturer in capturers { capturer.stop() }
-        queue.sync {
+        return queue.sync {
             running = false
             timer?.cancel()
             timer = nil
+            // Capture the final chunk directly instead of letting it take the
+            // async main-queue path the rotation chunks use.
+            var finalChunk: ClosedChunk?
+            let streamingHandler = writer.onChunkClosed
+            writer.onChunkClosed = { finalChunk = $0 }
             writer.finish()
+            writer.onChunkClosed = streamingHandler
+            return finalChunk
         }
     }
 

@@ -55,6 +55,13 @@
 		FC08C41276E104FEBC8DDAC8 /* AudioRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 249F7951B3D1B5389E615A83 /* AudioRecorder.swift */; };
 		FC3A3E1DE3998940BF19BF6C /* CodexAuthCheck.swift in Sources */ = {isa = PBXBuildFile; fileRef = 915A46A3B1AC7A9F80B39BBA /* CodexAuthCheck.swift */; };
 		FDAD721316F95CAA3A6267A5 /* Sound.swift in Sources */ = {isa = PBXBuildFile; fileRef = 373B7868026309291957FB7B /* Sound.swift */; };
+		AA10AA10AA10AA10AA10AA10 /* TranscriptBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB10BB10BB10BB10BB10BB10 /* TranscriptBuilder.swift */; };
+		AA11AA11AA11AA11AA11AA11 /* SessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB11BB11BB11BB11BB11BB11 /* SessionStore.swift */; };
+		AA12AA12AA12AA12AA12AA12 /* SessionController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB12BB12BB12BB12BB12BB12 /* SessionController.swift */; };
+		AA13AA13AA13AA13AA13AA13 /* TranscriptBuilderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB13BB13BB13BB13BB13BB13 /* TranscriptBuilderTests.swift */; };
+		AA14AA14AA14AA14AA14AA14 /* SessionStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB14BB14BB14BB14BB14BB14 /* SessionStoreTests.swift */; };
+		AA15AA15AA15AA15AA15AA15 /* NotesTitleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB15BB15BB15BB15BB15BB15 /* NotesTitleTests.swift */; };
+		AA16AA16AA16AA16AA16AA16 /* SessionControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB16BB16BB16BB16BB16BB16 /* SessionControllerTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -120,6 +127,13 @@
 		EBA0F84BDC3CF425D094A331 /* JotApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JotApp.swift; sourceTree = "<group>"; };
 		F63C1DB4A257EA2EF9D8B4E0 /* CheckStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckStatus.swift; sourceTree = "<group>"; };
 		F966AE6F72289AC8AE7B7CCB /* keytap.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = keytap.mp3; sourceTree = "<group>"; };
+		BB10BB10BB10BB10BB10BB10 /* TranscriptBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptBuilder.swift; sourceTree = "<group>"; };
+		BB11BB11BB11BB11BB11BB11 /* SessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStore.swift; sourceTree = "<group>"; };
+		BB12BB12BB12BB12BB12BB12 /* SessionController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionController.swift; sourceTree = "<group>"; };
+		BB13BB13BB13BB13BB13BB13 /* TranscriptBuilderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptBuilderTests.swift; sourceTree = "<group>"; };
+		BB14BB14BB14BB14BB14BB14 /* SessionStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStoreTests.swift; sourceTree = "<group>"; };
+		BB15BB15BB15BB15BB15BB15 /* NotesTitleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesTitleTests.swift; sourceTree = "<group>"; };
+		BB16BB16BB16BB16BB16BB16 /* SessionControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionControllerTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -132,6 +146,10 @@
 				1CDED6AFFE8795F0620399A3 /* ProcessRunnerTests.swift */,
 				E4CDD8BBB7FA493B4CE6C9F9 /* WhisperTranscriberIntegrationTests.swift */,
 				4359837C088023178384CF3A /* WhisperTranscriberTests.swift */,
+				BB13BB13BB13BB13BB13BB13 /* TranscriptBuilderTests.swift */,
+				BB14BB14BB14BB14BB14BB14 /* SessionStoreTests.swift */,
+				BB15BB15BB15BB15BB15BB15 /* NotesTitleTests.swift */,
+				BB16BB16BB16BB16BB16BB16 /* SessionControllerTests.swift */,
 				BC491356F2E6D57793F1A5C7 /* Fixtures */,
 			);
 			path = Tests;
@@ -216,6 +234,7 @@
 			isa = PBXGroup;
 			children = (
 				700FFA15A24DAE967B7B4330 /* AppState.swift */,
+				BB12BB12BB12BB12BB12BB12 /* SessionController.swift */,
 			);
 			path = State;
 			sourceTree = "<group>";
@@ -279,6 +298,8 @@
 				AD57E2F52D748DDB6AD60567 /* NotesAgentKind.swift */,
 				941CE89787951F62CAF08B7C /* NotesPrompt.swift */,
 				0DC346AB0F285E367683ACCD /* ProcessRunner.swift */,
+				BB11BB11BB11BB11BB11BB11 /* SessionStore.swift */,
+				BB10BB10BB10BB10BB10BB10 /* TranscriptBuilder.swift */,
 				E7DC4A1910A32FB77F673071 /* Transcriber.swift */,
 				357A0583058973939A0F1847 /* Audio */,
 			);
@@ -415,7 +436,9 @@
 				51560438BDDAD5E845F75B48 /* PencilIcon.swift in Sources */,
 				7A6A3D7722093566BD79C23A /* ProcessRunner.swift in Sources */,
 				19D6487161674971651DDE92 /* ScreenRecordingPermissionCheck.swift in Sources */,
+				AA12AA12AA12AA12AA12AA12 /* SessionController.swift in Sources */,
 				2B561667E00A56459FFEBFEF /* SessionPhase.swift in Sources */,
+				AA11AA11AA11AA11AA11AA11 /* SessionStore.swift in Sources */,
 				AB55024FDEA15BFD8FFDC364 /* SetupCheck.swift in Sources */,
 				E70B54A6F2A2727E747FA45B /* SetupState.swift in Sources */,
 				C42578F69F6A138C6F7D2DE4 /* SetupStep.swift in Sources */,
@@ -427,6 +450,7 @@
 				257431E1C45CF6BAA323C6E9 /* SystemAudioCapture.swift in Sources */,
 				2D33E81E22A618BB39B2C9B8 /* TestCaptureCheck.swift in Sources */,
 				6D1623EF367758BDD8B52D97 /* Transcriber.swift in Sources */,
+				AA10AA10AA10AA10AA10AA10 /* TranscriptBuilder.swift in Sources */,
 				9054C900D02778E485D29C3B /* WhisperModelCheck.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -441,6 +465,10 @@
 				15D71F87D3A4243F3CF4FCD7 /* ProcessRunnerTests.swift in Sources */,
 				89FDECDE1D2C6F7689768B90 /* WhisperTranscriberIntegrationTests.swift in Sources */,
 				92D0763676B92500EA7BF306 /* WhisperTranscriberTests.swift in Sources */,
+				AA13AA13AA13AA13AA13AA13 /* TranscriptBuilderTests.swift in Sources */,
+				AA14AA14AA14AA14AA14AA14 /* SessionStoreTests.swift in Sources */,
+				AA15AA15AA15AA15AA15AA15 /* NotesTitleTests.swift in Sources */,
+				AA16AA16AA16AA16AA16AA16 /* SessionControllerTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
