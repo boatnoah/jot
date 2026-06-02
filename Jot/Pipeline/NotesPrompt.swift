@@ -53,4 +53,15 @@ enum NotesPrompt {
         - Output only the Markdown notes — no preamble, no code fences.
         """
     }
+
+    /// Instructions for the dedicated one-word title call. The generated notes
+    /// are supplied out-of-band (stdin); the agent replies with a single word
+    /// used to name the Recording Folder.
+    static let titleInstructions = """
+        You are naming a session from its notes, which are provided to you as \
+        input. Reply with exactly ONE word: a single, specific noun that \
+        captures the heart of the session (e.g. "Roadmap", "Onboarding", \
+        "Budget"). No punctuation, no quotes, no markdown, no explanation — \
+        output only that one word.
+        """
 }

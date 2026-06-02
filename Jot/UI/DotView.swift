@@ -93,6 +93,17 @@ struct DotView: View {
                     .font(.system(size: 13, weight: .medium).monospacedDigit())
                     .foregroundStyle(.secondary)
             }
+            // Complete is a terminal state with no Dismiss button in its action
+            // row; this returns to Idle so the next session can be started.
+            if case .complete = app.phase {
+                Button(action: { app.dismiss() }) {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 15))
+                        .foregroundStyle(.white.opacity(0.45))
+                }
+                .buttonStyle(.plain)
+                .help("Done — back to start")
+            }
         }
     }
 
@@ -119,9 +130,9 @@ struct DotView: View {
 
         case .complete:
             HStack(spacing: 8) {
-                primaryButton("Open", systemImage: "doc.text", tint: .blue, wide: false) {}
-                secondaryButton("Copy", systemImage: "doc.on.doc") {}
-                secondaryButton("Reveal", systemImage: "folder") {}
+                primaryButton("Open", systemImage: "doc.text", tint: .blue, wide: false) { app.openNotes() }
+                secondaryButton("Copy", systemImage: "doc.on.doc") { app.copyNotes() }
+                secondaryButton("Reveal", systemImage: "folder") { app.revealInFinder() }
             }
 
         case .failed(let kind):

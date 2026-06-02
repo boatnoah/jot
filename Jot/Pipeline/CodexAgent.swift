@@ -15,6 +15,9 @@ struct CodexAgent: NotesAgent {
     /// Hardcoded for now; will become configurable (CONTEXT.md → Notes Agent).
     var timeout: Duration = .seconds(300)
 
+    /// The one-word title call is tiny, so it gets a much shorter leash.
+    var titleTimeout: Duration = .seconds(60)
+
     func preflight() async throws -> AgentStatus {
         // `codex login status` is a cheap, no-token auth probe.
         let result: ProcessResult
@@ -81,6 +84,41 @@ struct CodexAgent: NotesAgent {
             throw NotesAgentError.generationFailed("Codex returned no notes.")
         }
         return notes
+    }
+
+    /// Override the agent-agnostic default with a dedicated one-word title call:
+    /// the notes go in on stdin and Codex replies with a single word, which we
+    /// reduce to a clean folder-safe token. Best-effort by contract — the caller
+    /// (SessionController) treats any throw as "keep the datestamp name".
+    func generateTitle(fromNotes notes: String, metadata: MeetingMetadata) async throws -> String {
+        let outputFile = FileManager.default.temporaryDirectory
+            .appendingPathComponent("jot-title-\(UUID().uuidString).txt")
+        defer { try? FileManager.default.removeItem(at: outputFile) }
+
+        let result = try await ProcessRunner.run(
+            executableURL: executableURL,
+            arguments: [
+                "exec",
+                "--skip-git-repo-check",
+                "--sandbox", "read-only",
+                "--ephemeral",
+                "--output-last-message", outputFile.path,
+                NotesPrompt.titleInstructions,
+            ],
+            stdin: Data(notes.utf8),
+            environment: ExecutableLocator.augmentedEnvironment(),
+            timeout: titleTimeout)
+
+        guard result.exitCode == 0 else {
+            let detail = result.stderrString.trimmingCharacters(in: .whitespacesAndNewlines)
+            throw NotesAgentError.generationFailed(detail.isEmpty ? "Codex exited with code \(result.exitCode)." : detail)
+        }
+
+        let captured = (try? String(contentsOf: outputFile, encoding: .utf8)) ?? result.stdoutString
+        guard let word = NotesTitle.singleWord(from: captured) else {
+            throw NotesAgentError.generationFailed("Codex returned no usable title.")
+        }
+        return word
     }
 }
 
